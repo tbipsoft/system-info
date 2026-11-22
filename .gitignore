@@ -1,2 +1,4 @@
 /target
 /dist
+# Metadados do Windows (WSL)
+*:Zone.Identifier
