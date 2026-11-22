@@ -52,15 +52,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rg52-info"
-version = "1.0.0-alpha"
-dependencies = [
- "ab_glyph",
- "libc",
- "sdl2",
-]
-
-[[package]]
 name = "sdl2"
 version = "0.37.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -81,6 +72,15 @@ dependencies = [
  "cfg-if",
  "libc",
  "version-compare",
+]
+
+[[package]]
+name = "system-info"
+version = "1.0.0-alpha"
+dependencies = [
+ "ab_glyph",
+ "libc",
+ "sdl2",
 ]
 
 [[package]]

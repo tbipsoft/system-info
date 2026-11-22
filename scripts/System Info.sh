@@ -1,19 +1,19 @@
 #!/bin/bash
 #
-# System Info -- launcher do menu "Tools" do dArkOS para o app rg52-info
-# (informacoes do sistema na tela, no mesmo visual do rg52-led).
+# System Info -- launcher do menu "Tools" do dArkOS para o app system-info
+# (informacoes do sistema na tela, no mesmo visual do led-rgb).
 #
 # O app so le /proc e /sys: nao precisa de root. Onde colocar: este .sh na pasta dos
-# scripts do menu Tools e o binario `rg52-info` numa destas opcoes:
-#   <pasta deste script>/rg52-info/rg52-info   (pasta "rg52-info" ao lado do .sh)
-#   <pasta deste script>/rg52-info             (binario ao lado do .sh)
-#   /opt/rg52-info/rg52-info
+# scripts do menu Tools e o binario `system-info` numa destas opcoes:
+#   <pasta deste script>/system-info/system-info   (pasta "system-info" ao lado do .sh)
+#   <pasta deste script>/system-info             (binario ao lado do .sh)
+#   /opt/system-info/system-info
 #   DEVICE_PROFILE=r36s  forca o perfil (rg52mini, rg43, r36s, rgb10, a10mini, rk3566, generic)
 # Para trocar o destaque: ACCENT=teal (amber, teal, violet, coral ou #RRGGBB).
 
-APP=rg52-info
-LOG=/tmp/rg52-info.log
-RUN=/tmp/rg52-info.run
+APP=system-info
+LOG=/tmp/system-info.log
+RUN=/tmp/system-info.run
 TTY=${TTY:-/dev/tty1}
 USE_GPTOKEYB=${USE_GPTOKEYB:-0}
 
@@ -39,7 +39,7 @@ sudo chmod 666 "$TTY" 2>/dev/null
 printf '\033c\e[?25l' > "$TTY" 2>/dev/null
 
 BIN=$(find_bin) || {
-  say "rg52-info nao encontrado.
+  say "system-info nao encontrado.
 
 Coloque o binario em uma destas opcoes:
   $HERE/$APP/$APP
@@ -79,7 +79,7 @@ env \
 STATUS=$?
 
 if [ "$STATUS" -ne 0 ]; then
-  say "rg52-info terminou com erro ($STATUS).
+  say "system-info terminou com erro ($STATUS).
 
 $(tail -n 12 "$LOG" 2>/dev/null)
 

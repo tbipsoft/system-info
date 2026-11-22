@@ -506,7 +506,7 @@ mod tests {
     }
 
     fn fake_root(name: &str) -> PathBuf {
-        let r = std::env::temp_dir().join(format!("rg52info-{name}-{}", std::process::id()));
+        let r = std::env::temp_dir().join(format!("system_info-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&r);
         let w = |p: &str, c: &str| {
             let f = r.join(p);
@@ -564,7 +564,7 @@ mod tests {
 
     #[test]
     fn arvore_vazia_nao_quebra() {
-        let r = std::env::temp_dir().join(format!("rg52info-empty-{}", std::process::id()));
+        let r = std::env::temp_dir().join(format!("system_info-empty-{}", std::process::id()));
         let _ = fs::create_dir_all(&r);
         let i = Sys::new(&r).collect();
         assert_eq!(i.host, "");

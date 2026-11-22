@@ -1,5 +1,5 @@
 #![allow(clippy::too_many_arguments)]
-//! Tela de informacoes (design 960x540, mesma linguagem visual do rg52-led): seis
+//! Tela de informacoes (design 960x540, mesma linguagem visual do led-rgb): seis
 //! cartoes com barras de uso. Desenhada por software em um `Pixmap`; o `main` so a envia
 //! para uma textura SDL, entao a tela tambem e testada e fotografada sem janela.
 
@@ -888,7 +888,7 @@ mod tests {
 
     #[test]
     fn captura_para_inspecao() {
-        if let Ok(p) = std::env::var("RG52_INFO_DUMP") {
+        if let Ok(p) = std::env::var("SYSTEM_INFO_DUMP") {
             shot(1280, 720, &info())
                 .write_ppm(std::path::Path::new(&p))
                 .unwrap();

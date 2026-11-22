@@ -1,5 +1,5 @@
 [package]
-name = "rg52-info"
+name = "system-info"
 version = "1.0.0-alpha"
 edition = "2021"
 rust-version = "1.80"
@@ -7,11 +7,11 @@ description = "Informacoes do sistema (CPU, bateria, memoria, rede, discos) na t
 license = "MIT"
 
 [lib]
-name = "rg52info"
+name = "system_info"
 path = "src/lib.rs"
 
 [[bin]]
-name = "rg52-info"
+name = "system-info"
 path = "src/main.rs"
 required-features = ["ui"]
 

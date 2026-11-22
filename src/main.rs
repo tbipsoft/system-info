@@ -1,4 +1,4 @@
-//! rg52-info: mostra as informacoes do sistema na tela do aparelho (so leitura, nao
+//! system-info: mostra as informacoes do sistema na tela do aparelho (so leitura, nao
 //! precisa de root). Atualiza a cada segundo; B/Esc/Start sai.
 
 use std::{
@@ -8,7 +8,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use rg52info::{
+use system_info::{
     devices,
     gfx::{Color, Fonts, Pixmap},
     sysinfo::{local_time, Sys},
@@ -22,9 +22,9 @@ use sdl2::{
 };
 
 const HELP: &str = "\
-rg52-info - informacoes do sistema na tela (RG52 Mini / dArkOS)
+system-info - informacoes do sistema na tela (RG52 Mini / dArkOS)
 
-USO: rg52-info [opcoes]
+USO: system-info [opcoes]
   --device ID       auto (padrao), rg52mini, rg43, r36s, rgb10, a10mini, rk3566 ou generic
   --fullscreen      tela cheia (use no aparelho)
   --no-gamepad      ignora o gamepad do SDL (use com o gptokeyb)
