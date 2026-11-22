@@ -8,6 +8,7 @@
 #   <pasta deste script>/rg52-info/rg52-info   (pasta "rg52-info" ao lado do .sh)
 #   <pasta deste script>/rg52-info             (binario ao lado do .sh)
 #   /opt/rg52-info/rg52-info
+#   DEVICE_PROFILE=r36s  forca o perfil (rg52mini, rg43, r36s, rgb10, a10mini, rk3566, generic)
 # Para trocar o destaque: ACCENT=teal (amber, teal, violet, coral ou #RRGGBB).
 
 APP=rg52-info
@@ -59,6 +60,7 @@ export SDL_GAMECONTROLLERCONFIG_FILE="/opt/inttools/gamecontrollerdb.txt"
 export XDG_RUNTIME_DIR="/run/user/$UID/"
 
 ARGS=(--fullscreen)
+[ -n "$DEVICE_PROFILE" ] && ARGS+=(--device "$DEVICE_PROFILE")
 [ -n "$ACCENT" ] && ARGS+=(--accent "$ACCENT")
 if [ "$USE_GPTOKEYB" = "1" ]; then
   sudo chmod 666 /dev/uinput

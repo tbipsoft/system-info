@@ -9,9 +9,10 @@ use std::{
 };
 
 use rg52info::{
+    devices,
     gfx::{Color, Fonts, Pixmap},
     sysinfo::{local_time, Sys},
-    ui::{parse_accent, render, ACCENT},
+    ui::{page_count, parse_accent, render, Screen, ACCENT},
 };
 use sdl2::{
     controller::{Button, GameController},
@@ -24,16 +25,22 @@ const HELP: &str = "\
 rg52-info - informacoes do sistema na tela (RG52 Mini / dArkOS)
 
 USO: rg52-info [opcoes]
+  --device ID       auto (padrao), rg52mini, rg43, r36s, rgb10, a10mini, rk3566 ou generic
   --fullscreen      tela cheia (use no aparelho)
   --no-gamepad      ignora o gamepad do SDL (use com o gptokeyb)
   --interval S      segundos entre atualizacoes (padrao 1)
   --accent COR      amber (padrao), teal, violet, coral ou #RRGGBB
   --root PATH       le /proc e /sys de outra raiz (testes)
-  --screenshot PPM  (depuracao) desenha um quadro 1280x720 sem janela, salva em PPM e sai
+  --screenshot PPM  (depuracao) desenha um quadro sem janela, salva em PPM e sai
+  --size LxA        tamanho do --screenshot (padrao 1280x720)
+  --page N          pagina inicial nas telas compactas (padrao 1)
   -h, --help        esta ajuda
 ";
 
 struct Args {
+    device: Option<String>,
+    size: (usize, usize),
+    page: usize,
     fullscreen: bool,
     no_gamepad: bool,
     interval: f32,
@@ -44,6 +51,9 @@ struct Args {
 
 fn parse_args() -> Result<Args, String> {
     let mut a = Args {
+        device: None,
+        size: (1280, 720),
+        page: 0,
         fullscreen: false,
         no_gamepad: false,
         interval: 1.0,
@@ -55,6 +65,23 @@ fn parse_args() -> Result<Args, String> {
     while let Some(arg) = it.next() {
         let mut val = |n: &str| it.next().ok_or_else(|| format!("{n} precisa de um valor"));
         match arg.as_str() {
+            "--device" => a.device = Some(val("--device")?),
+            "--size" => {
+                let s = val("--size")?;
+                a.size = s
+                    .split_once('x')
+                    .and_then(|(w, h)| Some((w.parse().ok()?, h.parse().ok()?)))
+                    .filter(|&(w, h): &(usize, usize)| w > 0 && h > 0)
+                    .ok_or_else(|| format!("--size invalido: {s:?} (use LxA, ex.: 640x480)"))?
+            }
+            "--page" => {
+                a.page = val("--page")?
+                    .parse::<usize>()
+                    .ok()
+                    .filter(|p| *p > 0)
+                    .ok_or("--page invalido")?
+                    - 1
+            }
             "--fullscreen" => a.fullscreen = true,
             "--no-gamepad" => a.no_gamepad = true,
             "--interval" => {
@@ -84,6 +111,16 @@ fn is_exit_key(k: Keycode) -> bool {
     )
 }
 
+/// Proxima pagina (ou anterior), dando a volta.
+fn turn(page: usize, pages: usize, next: bool) -> usize {
+    let page = page % pages;
+    if next {
+        (page + 1) % pages
+    } else {
+        (page + pages - 1) % pages
+    }
+}
+
 fn main() {
     let args = match parse_args() {
         Ok(a) => a,
@@ -101,10 +138,22 @@ fn main() {
 fn run(args: Args) -> Result<(), String> {
     let sys = Sys::new(&args.root);
     let fonts = Fonts::new();
+    // Compativel com qualquer aparelho (so le /proc e /sys): o perfil da o nome e a tela.
+    let detected = devices::resolve(args.device.as_deref())?;
+    let title = detected.profile.title;
+    let mut page = args.page;
 
     if let Some(path) = &args.screenshot {
-        let mut pm = Pixmap::new(1280, 720);
-        render(&mut pm, &fonts, &sys.collect(), &local_time(), args.accent);
+        let mut pm = Pixmap::new(args.size.0, args.size.1);
+        let screen = Screen { title, page };
+        render(
+            &mut pm,
+            &fonts,
+            &sys.collect(),
+            &local_time(),
+            args.accent,
+            &screen,
+        );
         return pm.write_ppm(path).map_err(|e| e.to_string());
     }
 
@@ -121,7 +170,7 @@ fn run(args: Args) -> Result<(), String> {
             }
         }
     }
-    let mut wb = video.window("RG52 INFO", 960, 540);
+    let mut wb = video.window(&format!("{title} INFO"), 960, 540);
     wb.position_centered().resizable();
     if args.fullscreen {
         wb.fullscreen_desktop();
@@ -154,6 +203,32 @@ fn run(args: Args) -> Result<(), String> {
                 Event::KeyDown {
                     keycode: Some(k), ..
                 } if is_exit_key(k) => quit = true,
+                Event::KeyDown {
+                    keycode: Some(Keycode::Left | Keycode::PageUp),
+                    ..
+                } => {
+                    page = turn(page, page_count(w as usize, h as usize), false);
+                    force = true;
+                }
+                Event::KeyDown {
+                    keycode: Some(Keycode::Right | Keycode::PageDown),
+                    ..
+                } => {
+                    page = turn(page, page_count(w as usize, h as usize), true);
+                    force = true;
+                }
+                Event::ControllerButtonDown {
+                    button:
+                        button @ (Button::DPadLeft
+                        | Button::DPadRight
+                        | Button::LeftShoulder
+                        | Button::RightShoulder),
+                    ..
+                } if !args.no_gamepad => {
+                    let next = matches!(button, Button::DPadRight | Button::RightShoulder);
+                    page = turn(page, page_count(w as usize, h as usize), next);
+                    force = true;
+                }
                 Event::MouseButtonDown { .. } => {}
                 Event::ControllerButtonDown { button, .. }
                     if !args.no_gamepad
@@ -191,7 +266,15 @@ fn run(args: Args) -> Result<(), String> {
         }
         if force || last.elapsed() >= every {
             last = Instant::now();
-            render(&mut pm, &fonts, &sys.collect(), &local_time(), args.accent);
+            let screen = Screen { title, page };
+            render(
+                &mut pm,
+                &fonts,
+                &sys.collect(),
+                &local_time(),
+                args.accent,
+                &screen,
+            );
             tex.update(None, pm.data(), pm.pitch())
                 .map_err(|e| e.to_string())?;
             canvas.copy(&tex, None, None)?;
